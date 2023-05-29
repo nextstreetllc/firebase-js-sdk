@@ -31,24 +31,44 @@ import { OperationType } from '../../model/enums';
 export async function _signInWithCredential(
   auth: AuthInternal,
   credential: AuthCredential,
-  bypassAuthState = false
+  bypassAuthState = false,
+  doAfterEmailPasswordRequest?: () => Promise<void>,
+  doBeforeAuthStateChange?: (creds: UserCredential) => Promise<void>,
 ): Promise<UserCredential> {
   const operationType = OperationType.SIGN_IN;
-  const response = await _processCredentialSavingMfaContextIfNecessary(
-    auth,
-    operationType,
-    credential
-  );
-  const userCredential = await UserCredentialImpl._fromIdTokenResponse(
-    auth,
-    operationType,
-    response
-  );
+  try {
+    const response = await _processCredentialSavingMfaContextIfNecessary(
+      auth,
+      operationType,
+      credential
+    );
+    
+    if (doAfterEmailPasswordRequest) {
+      await doAfterEmailPasswordRequest();    
+    }
 
-  if (!bypassAuthState) {
-    await auth._updateCurrentUser(userCredential.user);
+    const userCredential = await UserCredentialImpl._fromIdTokenResponse(
+      auth,
+      operationType,
+      response
+    );
+  
+    if (doBeforeAuthStateChange){
+      await doBeforeAuthStateChange(userCredential);
+    }
+  
+    if (!bypassAuthState) {
+      await auth._updateCurrentUser(userCredential.user);
+    }
+    
+    return userCredential;
+  } catch (e: any) {
+    if (e?.code === 'auth/multi-factor-auth-required' && doAfterEmailPasswordRequest) {
+      await doAfterEmailPasswordRequest();
+    }
+
+    throw e;
   }
-  return userCredential;
 }
 
 /**
@@ -64,9 +84,17 @@ export async function _signInWithCredential(
  */
 export async function signInWithCredential(
   auth: Auth,
-  credential: AuthCredential
+  credential: AuthCredential,
+  doAfterEmailPasswordRequest?: () => Promise<void>,
+  doBeforeAuthStateChange?: (creds: UserCredential) => Promise<void>,
 ): Promise<UserCredential> {
-  return _signInWithCredential(_castAuth(auth), credential);
+  return _signInWithCredential(
+    _castAuth(auth),
+    credential,
+    false,
+    doAfterEmailPasswordRequest,
+    doBeforeAuthStateChange,
+  );
 }
 
 /**

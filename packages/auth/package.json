@@ -1,6 +1,6 @@
 {
   "name": "@firebase/auth",
-  "version": "0.23.2",
+  "version": "0.23.2c",
   "description": "The Firebase Authenticaton component of the Firebase JS SDK.",
   "author": "Firebase <firebase-support@google.com> (https://firebase.google.com/)",
   "main": "dist/node/index.js",
@@ -139,7 +139,7 @@
   "bugs": {
     "url": "https://github.com/firebase/firebase-js-sdk/issues"
   },
-  "typings": "dist/auth.d.ts",
+  "typings": "./dist/auth-public.d.ts",
   "nyc": {
     "extension": [
       ".ts"

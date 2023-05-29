@@ -388,7 +388,7 @@ export function getIdToken(user: User, forceRefresh?: boolean): Promise<string>;
 export function getIdTokenResult(user: User, forceRefresh?: boolean): Promise<IdTokenResult>;
 
 // @public
-export function getMultiFactorResolver(auth: Auth, error: MultiFactorError): MultiFactorResolver;
+export function getMultiFactorResolver(auth: Auth, error: MultiFactorError, doBeforeAuthStateChange?: (creds: UserCredential) => Promise<void>): MultiFactorResolver;
 
 // @public
 export function getRedirectResult(auth: Auth, resolver?: PopupRedirectResolver): Promise<UserCredential | null>;
@@ -734,7 +734,7 @@ export const SignInMethod: {
 };
 
 // @public
-export function signInWithCredential(auth: Auth, credential: AuthCredential): Promise<UserCredential>;
+export function signInWithCredential(auth: Auth, credential: AuthCredential, doAfterEmailPasswordRequest?: () => Promise<void>, doBeforeAuthStateChange?: (creds: UserCredential) => Promise<void>): Promise<UserCredential>;
 
 // @public
 export function signInWithCustomToken(auth: Auth, customToken: string): Promise<UserCredential>;

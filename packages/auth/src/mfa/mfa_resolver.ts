@@ -46,7 +46,8 @@ export class MultiFactorResolverImpl implements MultiFactorResolver {
   /** @internal */
   static _fromError(
     authExtern: Auth,
-    error: MultiFactorErrorInternal
+    error: MultiFactorErrorInternal,
+    doBeforeAuthStateChange?: (creds: UserCredential) => Promise<void>,
   ): MultiFactorResolverImpl {
     const auth = _castAuth(authExtern);
     const serverResponse = error.customData._serverResponse;
@@ -90,6 +91,9 @@ export class MultiFactorResolverImpl implements MultiFactorResolver {
                 error.operationType,
                 idTokenResponse
               );
+            if (doBeforeAuthStateChange) {
+              await doBeforeAuthStateChange(userCredential);
+            }
             await auth._updateCurrentUser(userCredential.user);
             return userCredential;
           case OperationType.REAUTHENTICATE:
@@ -126,7 +130,8 @@ export class MultiFactorResolverImpl implements MultiFactorResolver {
  */
 export function getMultiFactorResolver(
   auth: Auth,
-  error: MultiFactorError
+  error: MultiFactorError,
+  doBeforeAuthStateChange?: (creds: UserCredential) => Promise<void>,
 ): MultiFactorResolver {
   const authModular = getModularInstance(auth);
   const errorInternal = error as MultiFactorErrorInternal;
@@ -141,5 +146,5 @@ export function getMultiFactorResolver(
     AuthErrorCode.ARGUMENT_ERROR
   );
 
-  return MultiFactorResolverImpl._fromError(authModular, errorInternal);
+  return MultiFactorResolverImpl._fromError(authModular, errorInternal, doBeforeAuthStateChange);
 }
